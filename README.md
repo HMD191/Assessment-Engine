@@ -68,14 +68,14 @@ Check out a few resources that may come in handy when working with NestJS:
   - [x] GET /submissions/:id to get submission status/data
   - [x] PATCH /submissions/:id to update submission data
 
-- [ ] Add submission into queue
-  - [ ] enqueue submissions after validation
-  - [ ] ensure idempotency / deduplication
-  - [ ] implement retry/backoff and dead-letter handling
-- [ ] Implement worker
-  - [ ] pull jobs, process submissions, acknowledge/fail correctly
+- [x] Add submission into queue
+  - [x] enqueue submissions after validation
+  - [x] ensure idempotency / deduplication
+  - [x] implement retry/backoff and dead-letter handling
+- [x] Implement worker
+  - [x] pull jobs, process submissions, acknowledge/fail correctly
   - [ ] support concurrency limits and graceful shutdown
-  - [ ] surface processing errors for retries / DLQ
+  - [x] surface processing errors for retries / DLQ
 - [ ] Add structured logging
   - [ ] integrate logger (winston/pino) with levels and JSON output
   - [ ] attach request IDs / correlation IDs to logs
