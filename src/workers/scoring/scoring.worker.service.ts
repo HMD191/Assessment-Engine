@@ -35,6 +35,7 @@ export class ScoringWorkerService extends WorkerHost {
     const { jobId, submissionId } = job.data;
 
     const record = await this.scoreJobRepo.findOne({
+      select: ['id', 'data'],
       where: { id: jobId },
     });
     if (!record) {
@@ -45,8 +46,6 @@ export class ScoringWorkerService extends WorkerHost {
     try {
       this.logger.log(`Scoring submission ${submissionId} for job ${jobId}`);
       await this.scoreJobRepo.update(jobId, { status: ScoreJobStatus.RUNNING });
-
-      //what if server restarts here? job should be re-queued and re-processed
 
       const dataForScoring = record.data;
 
@@ -73,6 +72,7 @@ export class ScoringWorkerService extends WorkerHost {
     }
   }
 
+  // fake scoring function
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private async getScore(data: any): Promise<ScoreDto> {
     const timeoutMs = 60000;

@@ -7,9 +7,9 @@ async function bootstrap() {
 
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true, // loại bỏ các field không có trong DTO
-      forbidNonWhitelisted: true, // ném lỗi nếu có field lạ
-      transform: true, // chuyển types (ví dụ "1" => 1)
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
     }),
   );
 

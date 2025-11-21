@@ -34,6 +34,7 @@ export class ScoreJobService {
   ): Promise<ScoreJobResponseDto> {
     try {
       const submission = await this.submissionRepo.findOne({
+        select: ['id', 'status'],
         where: {
           learnerId: createScoreJobDto.learnerId,
           simulationId: createScoreJobDto.simulationId,
@@ -47,17 +48,9 @@ export class ScoreJobService {
       }
 
       if (submission.status !== SubmissionStatus.SUBMITTED) {
-        throw new Error('Submission is not in SUBMITTED status');
-      }
-
-      const existingJob = await this.scoreJobRepo.findOne({
-        where: {
-          submissionId: submission.id,
-        },
-      });
-
-      if (existingJob) {
-        throw new Error('A score job is already queued for this submission');
+        throw new Error(
+          'Submission is not in SUBMITTED status, cannot create score job',
+        );
       }
 
       const jobInfo = this.scoreJobRepo.create({
@@ -68,14 +61,22 @@ export class ScoreJobService {
         status: ScoreJobStatus.QUEUED,
       });
 
-      const savedJob = await this.scoreJobRepo.save(jobInfo);
+      const savedJob = await this.submissionRepo.manager.transaction(
+        async (manager) => {
+          const savedJob = await manager.save(jobInfo);
+          await manager.update(Submission, submission.id, {
+            latestScoreJobId: savedJob.id,
+          });
+          return savedJob;
+        },
+      );
 
       await this.scoreJobQueue.add(
         'scoreJobHandler',
         {
           jobId: savedJob.id,
           submissionId: submission.id,
-          //data can be huge, so only pass submissionId and load data in db later
+          // data can be huge, so only pass submissionId and load data in db later
         },
         {
           jobId: savedJob.id,
@@ -85,6 +86,9 @@ export class ScoreJobService {
       );
 
       this.logger.log('Created score job:', savedJob);
+      this.logger.log(
+        `Updated submission ${submission.id} with latestScoreJobId: ${savedJob.id}`,
+      );
       return { jobId: savedJob.id, status: savedJob.status };
     } catch (error) {
       this.logger.error('Error creating score job:', error.message);

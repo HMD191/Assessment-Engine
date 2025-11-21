@@ -1,4 +1,10 @@
-import { IsOptional, IsObject, IsString, IsNotEmpty } from 'class-validator';
+import {
+  IsOptional,
+  IsObject,
+  IsString,
+  IsNotEmpty,
+  IsBoolean,
+} from 'class-validator';
 
 class SubmissionCreateDto {
   @IsNotEmpty({ message: 'learnerId is required' })
@@ -11,8 +17,16 @@ class SubmissionCreateDto {
 }
 
 class SubmissionUpdateDto {
+  @IsObject({ message: 'data must be an object' })
+  data: Record<string, any>;
+}
+
+class SubmissionSubmitDto {
   @IsOptional()
-  @IsObject()
+  @IsBoolean({ message: 'scoreNow must be a boolean' })
+  scoreNow?: boolean;
+
+  @IsObject({ message: 'data must be an object' })
   data?: Record<string, any>;
 }
 
@@ -24,4 +38,9 @@ class SubmissionResponseDto {
   status: 'IN_PROGRESS' | 'SUBMITTED';
 }
 
-export { SubmissionCreateDto, SubmissionUpdateDto, SubmissionResponseDto };
+export {
+  SubmissionCreateDto,
+  SubmissionUpdateDto,
+  SubmissionResponseDto,
+  SubmissionSubmitDto,
+};

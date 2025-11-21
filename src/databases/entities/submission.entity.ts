@@ -16,13 +16,16 @@ export class Submission {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  //should refer to User entity
+  // foreign key to User entity
   @Column({ name: 'learner_id' })
   learnerId: string;
 
-  //should refer to Simulation entity
+  // foreign key to Simulation entity
   @Column({ name: 'simulation_id' })
   simulationId: string;
+
+  @Column({ name: 'latest_score_job_id', nullable: true })
+  latestScoreJobId: string;
 
   @Column({
     type: 'enum',
@@ -43,4 +46,7 @@ export class Submission {
     name: 'updated_at',
   })
   updatedAt: Date;
+
+  @Column({ type: 'jsonb', nullable: true })
+  metadata: any;
 }

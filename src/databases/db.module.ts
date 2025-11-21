@@ -18,7 +18,7 @@ import { BullModule } from '@nestjs/bullmq';
         database: configService.get<string>('DB_NAME'),
 
         entities: [Submission, ScoreJob],
-        synchronize: true, // set to false in production
+        synchronize: true, // should set to false in production
       }),
     }),
     BullModule.forRootAsync({

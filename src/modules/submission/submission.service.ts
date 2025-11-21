@@ -12,10 +12,13 @@ import {
 import {
   SubmissionCreateDto,
   SubmissionResponseDto,
+  SubmissionSubmitDto,
   SubmissionUpdateDto,
 } from 'src/dtos/submission.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { ScoreJobService } from '../score-job/score-job.service';
+import { CreateScoreJobDto } from 'src/dtos/score-job.dto';
 
 @Injectable()
 export class SubmissionService {
@@ -24,12 +27,15 @@ export class SubmissionService {
   constructor(
     @InjectRepository(Submission)
     private readonly submissionRepo: Repository<Submission>,
+
+    private readonly scoreJobService: ScoreJobService,
   ) {}
 
-  async createSubmission(
+  async create(
     submissionDto: SubmissionCreateDto,
   ): Promise<SubmissionResponseDto> {
     const existedSubmission = await this.submissionRepo.findOne({
+      select: ['id'],
       where: {
         learnerId: submissionDto.learnerId,
         simulationId: submissionDto.simulationId,
@@ -61,7 +67,7 @@ export class SubmissionService {
     }
   }
 
-  async updateSubmission(
+  async update(
     id: string,
     updateDto: SubmissionUpdateDto,
   ): Promise<SubmissionResponseDto> {
@@ -73,8 +79,11 @@ export class SubmissionService {
         throw new ConflictException('Cannot update a submitted submission');
       }
 
-      //ASSUME: data has a complete structure (data must have enough fields)
-      submission.data = { ...submission.data, ...(updateDto.data ?? {}) };
+      // ASSUME: data has a complete structure (data must have enough fields)
+      submission.data = {
+        ...(submission.data ?? {}),
+        ...(updateDto.data ?? {}),
+      };
       const saved = await this.submissionRepo.save(submission);
 
       this.logger.log('Updated submission:', saved);
@@ -85,7 +94,10 @@ export class SubmissionService {
     }
   }
 
-  async submitSubmission(id: string): Promise<SubmissionResponseDto> {
+  async submit(
+    id: string,
+    submitDto: SubmissionSubmitDto,
+  ): Promise<SubmissionResponseDto> {
     try {
       const submission = await this.submissionRepo.findOne({ where: { id } });
 
@@ -95,9 +107,28 @@ export class SubmissionService {
       }
 
       submission.status = SubmissionStatus.SUBMITTED;
+      submission.data = {
+        ...(submission.data ?? {}),
+        ...(submitDto.data ?? {}),
+      };
       const savedSubmission = await this.submissionRepo.save(submission);
-
       this.logger.log('Submitted submission:', savedSubmission);
+
+      if (submitDto.scoreNow) {
+        const createdJobObject: CreateScoreJobDto = {
+          submissionId: savedSubmission.id,
+          learnerId: savedSubmission.learnerId,
+          simulationId: savedSubmission.simulationId,
+          data: savedSubmission.data,
+        };
+        await this.scoreJobService.createJob(createdJobObject);
+
+        this.logger.log(
+          'Created score job for submission:',
+          savedSubmission.id,
+        );
+      }
+
       return {
         submissionId: savedSubmission.id,
         status: savedSubmission.status,
@@ -106,26 +137,5 @@ export class SubmissionService {
       this.logger.error('Error submitting submission:', error);
       throw new InternalServerErrorException('Failed to submit submission');
     }
-    // const scoreJob = this.scoreJobRepo.create({
-    //   submissionId: submission.id,
-    //   learnerId: submission.learnerId,
-    //   simulationId: submission.simulationId,
-    //   status: ScoreJobStatus.QUEUED,
-    // });
-
-    // try {
-    //   const result = await this.dataSource.transaction(async (manager) => {
-    //     const savedSubmission = await manager.save(submission);
-    //     // await manager.save(scoreJob);
-
-    //     return savedSubmission;
-    //   });
-
-    //   this.logger.log('Submit successfully:', result);
-    //   return { submissionId: result.id, status: result.status };
-    // } catch (error) {
-    //   this.logger.error('Submit failed:', error);
-    //   throw new InternalServerErrorException('Failed to submit submission');
-    // }
   }
 }

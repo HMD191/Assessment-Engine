@@ -2,9 +2,12 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Submission } from './submission.entity';
 
 export enum ScoreJobStatus {
   QUEUED = 'QUEUED',
@@ -18,17 +21,20 @@ export class ScoreJob {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  //should refer to User entity
+  @ManyToOne(() => Submission)
+  @JoinColumn({ name: 'submission_id' })
+  submission: Submission;
   @Column({ name: 'submission_id' })
   submissionId: string;
 
   @Column({ name: 'data', type: 'jsonb', nullable: true })
   data: Record<string, any>;
 
-  //should refer to Simulation entity
+  // foreign key to User entity
   @Column({ name: 'learner_id' })
   learnerId: string;
 
+  // foreign key to Simulation entity
   @Column({ name: 'simulation_id' })
   simulationId: string;
 
@@ -42,10 +48,10 @@ export class ScoreJob {
   @Column({ type: 'float', nullable: true })
   score: number;
 
-  @Column({ nullable: true })
+  @Column({ type: 'text', nullable: true })
   feedback: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'text', nullable: true })
   errorMessage: string;
 
   @CreateDateColumn({
@@ -57,4 +63,7 @@ export class ScoreJob {
     name: 'updated_at',
   })
   updatedAt: Date;
+
+  @Column({ type: 'jsonb', nullable: true })
+  metadata: any;
 }

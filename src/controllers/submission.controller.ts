@@ -2,6 +2,7 @@ import { Body, Controller, HttpCode, Param, Patch, Post } from '@nestjs/common';
 import {
   SubmissionCreateDto,
   SubmissionResponseDto,
+  SubmissionSubmitDto,
   SubmissionUpdateDto,
 } from 'src/dtos/submission.dto';
 
@@ -12,25 +13,26 @@ export class SubmissionController {
   constructor(private readonly submissionService: SubmissionService) {}
 
   @Post()
-  async createSubmission(
+  async create(
     @Body() dto: SubmissionCreateDto,
   ): Promise<SubmissionResponseDto> {
-    return this.submissionService.createSubmission(dto);
+    return this.submissionService.create(dto);
   }
 
   @Patch(':id')
-  async updateSubmission(
+  async update(
     @Param('id') id: string,
     @Body() updateDto: SubmissionUpdateDto,
   ): Promise<SubmissionResponseDto> {
-    return this.submissionService.updateSubmission(id, updateDto);
+    return this.submissionService.update(id, updateDto);
   }
 
   @Post(':id/submit')
   @HttpCode(200)
-  async submitSubmission(
+  async submit(
     @Param('id') id: string,
+    @Body() submitDto: SubmissionSubmitDto,
   ): Promise<SubmissionResponseDto> {
-    return this.submissionService.submitSubmission(id);
+    return this.submissionService.submit(id, submitDto);
   }
 }

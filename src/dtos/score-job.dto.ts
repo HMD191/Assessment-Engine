@@ -1,4 +1,4 @@
-import { IsNumber, IsObject, IsString } from 'class-validator';
+import { IsNumber, IsObject, IsOptional, IsString } from 'class-validator';
 
 class CreateScoreJobDto {
   @IsString({ message: 'learnerId must be a string' })
@@ -9,6 +9,10 @@ class CreateScoreJobDto {
 
   @IsObject({ message: 'data must be an object' })
   readonly data: Record<string, any>;
+
+  @IsOptional()
+  @IsString({ message: 'submissionId must be a string' })
+  readonly submissionId?: string;
 }
 
 class ScoreJobResponseDto {
