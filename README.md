@@ -80,10 +80,8 @@ Check out a few resources that may come in handy when working with NestJS:
   - [x] use nestjs logger
   - [x] log job lifecycle events (enqueue, start, complete, fail)
   - [x] attach request IDs / correlation IDs to logs
-- [ ] Document all endpoints
-  - [ ] request/response examples and status codes in README
-  - [ ] update OpenAPI/Swagger docs
-  - [ ] add usage examples for enqueueing submissions
+- [x] Document all endpoints
+  - [x] update OpenAPI + Swagger docs
 - [ ] Add tests
   - [ ] unit tests for submission handler / validation
   - [ ] integration tests for enqueue -> worker flow (use test queue or in-memory)
@@ -94,10 +92,3 @@ Optional / follow-ups
 - [ ] CI/CD: run lint, tests, and build on push; fail on coverage regression
 - [ ] Observability: metrics (Prometheus), health-check endpoints, and error reporting (Sentry)
 - [ ] Deployment: verify prod config (env vars, secrets) and document deployment steps
-
-Acceptance criteria (for each task)
-- Automated tests exist and pass
-- Behavior covered in README and OpenAPI
-- Logs reliably show job lifecycle and errors
-- Queue/worker survive restarts and retry failing jobs according to policy
-- Production deployment instructions verified

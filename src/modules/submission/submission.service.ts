@@ -34,8 +34,7 @@ export class SubmissionService {
   async create(
     submissionDto: SubmissionCreateDto,
   ): Promise<SubmissionResponseDto> {
-    const existedSubmission = await this.submissionRepo.findOne({
-      select: ['id'],
+    const existedSubmission = await this.submissionRepo.exists({
       where: {
         learnerId: submissionDto.learnerId,
         simulationId: submissionDto.simulationId,
@@ -51,70 +50,64 @@ export class SubmissionService {
       );
     }
 
-    try {
-      const sub = this.submissionRepo.create({
-        learnerId: submissionDto.learnerId,
-        simulationId: submissionDto.simulationId,
-        status: SubmissionStatus.IN_PROGRESS,
-      });
-      const savedData = await this.submissionRepo.save(sub);
+    const sub = this.submissionRepo.create({
+      learnerId: submissionDto.learnerId,
+      simulationId: submissionDto.simulationId,
+      status: SubmissionStatus.IN_PROGRESS,
+    });
+    const savedData = await this.submissionRepo.save(sub);
 
-      this.logger.log('Created submission:', savedData);
-      return { submissionId: savedData.id, status: savedData.status };
-    } catch (error) {
-      this.logger.error('Error creating submission:', error);
-      throw new InternalServerErrorException('Failed to create submission');
-    }
+    this.logger.log('Created submission:', savedData);
+    return { submissionId: savedData.id, status: savedData.status };
   }
 
   async update(
     id: string,
     updateDto: SubmissionUpdateDto,
   ): Promise<SubmissionResponseDto> {
-    try {
-      const submission = await this.submissionRepo.findOne({ where: { id } });
+    const submission = await this.submissionRepo.findOne({ where: { id } });
 
-      if (!submission) throw new NotFoundException('Submission not found');
-      if (submission.status === SubmissionStatus.SUBMITTED) {
-        throw new ConflictException('Cannot update a submitted submission');
-      }
-
-      // ASSUME: data has a complete structure (data must have enough fields)
-      submission.data = {
-        ...(submission.data ?? {}),
-        ...(updateDto.data ?? {}),
-      };
-      const saved = await this.submissionRepo.save(submission);
-
-      this.logger.log('Updated submission:', saved);
-      return { submissionId: saved.id, status: saved.status };
-    } catch (error) {
-      this.logger.error('Error updating submission:', error);
-      throw new InternalServerErrorException('Failed to update submission');
+    if (!submission) {
+      this.logger.warn(`Submission not found with id: ${id}`);
+      throw new NotFoundException('Submission not found');
     }
+    if (submission.status === SubmissionStatus.SUBMITTED) {
+      this.logger.warn(`Cannot update a submitted submission with id: ${id}`);
+      throw new ConflictException('Cannot update a submitted submission');
+    }
+
+    // ASSUME: data has a complete structure (data must have enough fields)
+    submission.data = {
+      ...(submission.data ?? {}),
+      ...(updateDto.data ?? {}),
+    };
+    const saved = await this.submissionRepo.save(submission);
+
+    this.logger.log('Updated submission:', saved);
+    return { submissionId: saved.id, status: saved.status };
   }
 
   async submit(
     id: string,
     submitDto: SubmissionSubmitDto,
   ): Promise<SubmissionResponseDto> {
-    try {
-      const submission = await this.submissionRepo.findOne({ where: { id } });
+    const submission = await this.submissionRepo.findOne({ where: { id } });
 
-      if (!submission) throw new NotFoundException('Submission not found');
-      if (submission.status === SubmissionStatus.SUBMITTED) {
-        return { submissionId: submission.id, status: submission.status };
-      }
+    if (!submission) throw new NotFoundException('Submission not found');
+    if (submission.status === SubmissionStatus.SUBMITTED) {
+      return { submissionId: submission.id, status: submission.status };
+    }
 
-      submission.status = SubmissionStatus.SUBMITTED;
-      submission.data = {
-        ...(submission.data ?? {}),
-        ...(submitDto.data ?? {}),
-      };
-      const savedSubmission = await this.submissionRepo.save(submission);
-      this.logger.log('Submitted submission:', savedSubmission);
+    submission.status = SubmissionStatus.SUBMITTED;
+    submission.data = {
+      ...(submission.data ?? {}),
+      ...(submitDto.data ?? {}),
+    };
+    const savedSubmission = await this.submissionRepo.save(submission);
+    this.logger.log('Submitted submission:', savedSubmission);
 
-      if (submitDto.scoreNow) {
+    if (submitDto.scoreNow) {
+      try {
         const createdJobObject: CreateScoreJobDto = {
           submissionId: savedSubmission.id,
           learnerId: savedSubmission.learnerId,
@@ -127,15 +120,20 @@ export class SubmissionService {
           'Created score job for submission:',
           savedSubmission.id,
         );
+      } catch (error) {
+        this.logger.error(
+          `Error creating score job for submission ${savedSubmission.id}:`,
+          error.message,
+        );
+        throw new InternalServerErrorException(
+          'Failed to create score job: ' + error.message,
+        );
       }
-
-      return {
-        submissionId: savedSubmission.id,
-        status: savedSubmission.status,
-      };
-    } catch (error) {
-      this.logger.error('Error submitting submission:', error);
-      throw new InternalServerErrorException('Failed to submit submission');
     }
+
+    return {
+      submissionId: savedSubmission.id,
+      status: savedSubmission.status,
+    };
   }
 }

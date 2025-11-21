@@ -1,0 +1,244 @@
+openapi: 3.0.3
+info:
+  title: Assessment Engine API
+  version: 1.0.0
+  description: API for managing submissions and score jobs
+
+servers:
+  - url: http://localhost:3001
+    description: Local server
+
+paths:
+  /submissions:
+    post:
+      summary: Create a new submission
+      description: Accepts learner ID and simulation ID to create a new submission.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmissionCreateDto'
+            examples:
+              example-1:
+                value:
+                  learnerId: "uuid-123"
+                  simulationId: "uuid-456"
+      responses:
+        '201':
+          description: Submission created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmissionResponseDto'
+        '409':
+          description: Conflict - Submission already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: number
+                    example: 409
+                  message:
+                    type: string
+                    example: "A submission already exists for this learner and simulation"
+        '500':
+          description: Internal server error
+
+  /submissions/{id}:
+    patch:
+      summary: Update a submission
+      description: Updates the submission data (cannot update if already submitted).
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmissionUpdateDto'
+            examples:
+              example-1:
+                value:
+                  data: { answer1: "A", answer2: "B" }
+      responses:
+        '200':
+          description: Submission updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmissionResponseDto'
+        '404':
+          description: Submission not found
+        '409':
+          description: Cannot update a submitted submission
+        '500':
+          description: Internal server error
+
+  /submissions/{id}/submit:
+    post:
+      summary: Submit a submission
+      description: Marks submission as submitted and optionally creates a score job.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmissionSubmitDto'
+            examples:
+              example-1:
+                value:
+                  scoreNow: true
+                  data: { answer1: "A", answer2: "B" }
+      responses:
+        '200':
+          description: Submission submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmissionResponseDto'
+        '404':
+          description: Submission not found
+        '500':
+          description: Internal server error
+
+  /score-jobs:
+    post:
+      summary: Create a scoring job
+      description: Enqueues a scoring job for a submitted submission.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateScoreJobDto'
+            examples:
+              example-1:
+                value:
+                  learnerId: "uuid-123"
+                  simulationId: "uuid-456"
+                  data: { answer1: "A", answer2: "B" }
+      responses:
+        '200':
+          description: Score job created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScoreJobResponseDto'
+        '404':
+          description: Submission not found
+        '400':
+          description: Submission not in SUBMITTED status
+        '500':
+          description: Internal server error
+
+  /score-jobs/{id}:
+    get:
+      summary: Get a score job
+      description: Returns the status and result of a scoring job.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Score job fetched successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScoreJobResponseDto'
+        '404':
+          description: Score job not found
+        '500':
+          description: Internal server error
+
+components:
+  schemas:
+    SubmissionCreateDto:
+      type: object
+      required:
+        - learnerId
+        - simulationId
+      properties:
+        learnerId:
+          type: string
+        simulationId:
+          type: string
+
+    SubmissionUpdateDto:
+      type: object
+      properties:
+        data:
+          type: object
+          additionalProperties: true
+
+    SubmissionSubmitDto:
+      type: object
+      properties:
+        scoreNow:
+          type: boolean
+        data:
+          type: object
+          additionalProperties: true
+
+    SubmissionResponseDto:
+      type: object
+      properties:
+        submissionId:
+          type: string
+        status:
+          type: string
+          enum:
+            - IN_PROGRESS
+            - SUBMITTED
+
+    CreateScoreJobDto:
+      type: object
+      required:
+        - learnerId
+        - simulationId
+        - data
+      properties:
+        learnerId:
+          type: string
+        simulationId:
+          type: string
+        submissionId:
+          type: string
+        data:
+          type: object
+          additionalProperties: true
+
+    ScoreJobResponseDto:
+      type: object
+      properties:
+        jobId:
+          type: string
+        status:
+          type: string
+          enum:
+            - QUEUED
+            - RUNNING
+            - DONE
+            - ERROR
+        score:
+          type: number
+        feedback:
+          type: string

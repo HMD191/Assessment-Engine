@@ -1,4 +1,5 @@
-import { Body, Controller, HttpCode, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Param, Patch, Post } from '@nestjs/common';
+import { ApiBody, ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
   SubmissionCreateDto,
   SubmissionResponseDto,
@@ -8,11 +9,17 @@ import {
 
 import { SubmissionService } from 'src/modules/submission/submission.service';
 
+@ApiTags('submissions')
 @Controller('submissions')
 export class SubmissionController {
   constructor(private readonly submissionService: SubmissionService) {}
 
   @Post()
+  @ApiBody({ type: SubmissionCreateDto })
+  @ApiResponse({
+    description: 'Submission created successfully.',
+    type: SubmissionResponseDto,
+  })
   async create(
     @Body() dto: SubmissionCreateDto,
   ): Promise<SubmissionResponseDto> {
@@ -20,6 +27,11 @@ export class SubmissionController {
   }
 
   @Patch(':id')
+  @ApiBody({ type: SubmissionUpdateDto })
+  @ApiResponse({
+    description: 'Submission updated successfully.',
+    type: SubmissionResponseDto,
+  })
   async update(
     @Param('id') id: string,
     @Body() updateDto: SubmissionUpdateDto,
@@ -28,7 +40,11 @@ export class SubmissionController {
   }
 
   @Post(':id/submit')
-  @HttpCode(200)
+  @ApiBody({ type: SubmissionSubmitDto })
+  @ApiResponse({
+    description: 'Submission submitted successfully.',
+    type: SubmissionResponseDto,
+  })
   async submit(
     @Param('id') id: string,
     @Body() submitDto: SubmissionSubmitDto,

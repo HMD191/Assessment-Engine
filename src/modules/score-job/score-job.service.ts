@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   ScoreJob,
@@ -42,13 +47,13 @@ export class ScoreJobService {
       });
 
       if (!submission) {
-        throw new Error(
+        throw new NotFoundException(
           'Submission not found for the given learner and simulation',
         );
       }
 
       if (submission.status !== SubmissionStatus.SUBMITTED) {
-        throw new Error(
+        throw new ConflictException(
           'Submission is not in SUBMITTED status, cannot create score job',
         );
       }
@@ -61,22 +66,23 @@ export class ScoreJobService {
         status: ScoreJobStatus.QUEUED,
       });
 
-      const savedJob = await this.submissionRepo.manager.transaction(
+      // Transaction
+      const savedJob = await this.scoreJobRepo.manager.transaction(
         async (manager) => {
-          const savedJob = await manager.save(jobInfo);
+          const saved = await manager.save(jobInfo);
           await manager.update(Submission, submission.id, {
-            latestScoreJobId: savedJob.id,
+            latestScoreJobId: saved.id,
           });
-          return savedJob;
+          return saved;
         },
       );
 
+      // Enqueue to BullMQ
       await this.scoreJobQueue.add(
         'scoreJobHandler',
         {
           jobId: savedJob.id,
           submissionId: submission.id,
-          // data can be huge, so only pass submissionId and load data in db later
         },
         {
           jobId: savedJob.id,
@@ -85,14 +91,18 @@ export class ScoreJobService {
         },
       );
 
-      this.logger.log('Created score job:', savedJob);
-      this.logger.log(
-        `Updated submission ${submission.id} with latestScoreJobId: ${savedJob.id}`,
-      );
+      this.logger.log(`Created score job ${savedJob.id}`);
       return { jobId: savedJob.id, status: savedJob.status };
     } catch (error) {
-      this.logger.error('Error creating score job:', error.message);
-      throw new Error('Failed to create score job: ' + error.message);
+      this.logger.error(
+        `Error creating score job: ${error.message}`,
+        error.stack,
+      );
+
+      if (error instanceof NotFoundException) throw error;
+      if (error instanceof ConflictException) throw error;
+
+      throw new InternalServerErrorException('Failed to create score job');
     }
   }
 
