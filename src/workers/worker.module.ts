@@ -1,9 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ScoringWorkerModule } from './scoring/scoring.worker.module';
 import Joi from 'joi';
-import { SubmissionModule } from './submission/submission.module';
 import { DatabaseModule } from 'src/databases/db.module';
-import { ScoreJobModule } from './score-job/score-job.module';
 
 @Module({
   imports: [
@@ -21,9 +20,8 @@ import { ScoreJobModule } from './score-job/score-job.module';
         REDIS_PASSWORD: Joi.string().allow('').optional(),
       }),
     }),
-    SubmissionModule,
-    ScoreJobModule,
     DatabaseModule,
+    ScoringWorkerModule,
   ],
 })
-export class AppModule {}
+export class WorkerModule {}

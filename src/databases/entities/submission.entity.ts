@@ -17,12 +17,12 @@ export class Submission {
   id: string;
 
   //should refer to User entity
-  @Column({ name: 'user_id' })
-  userId: number;
+  @Column({ name: 'learner_id' })
+  learnerId: string;
 
   //should refer to Simulation entity
   @Column({ name: 'simulation_id' })
-  simulationId: number;
+  simulationId: string;
 
   @Column({
     type: 'enum',
@@ -36,15 +36,11 @@ export class Submission {
 
   @CreateDateColumn({
     name: 'created_at',
-    type: 'timestamp',
-    default: () => 'CURRENT_TIMESTAMP',
   })
   createdAt: Date;
 
   @UpdateDateColumn({
     name: 'updated_at',
-    type: 'timestamp',
-    default: () => 'CURRENT_TIMESTAMP',
   })
   updatedAt: Date;
 }

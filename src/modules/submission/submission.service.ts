@@ -14,13 +14,19 @@ import {
   SubmissionUpdateDto,
 } from 'src/dtos/submission.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
+import { ScoreJob } from 'src/databases/entities/score-job.entity';
 
 @Injectable()
 export class SubmissionService {
   constructor(
     @InjectRepository(Submission)
     private readonly submissionRepo: Repository<Submission>,
+
+    @InjectRepository(ScoreJob)
+    private readonly scoreJobRepo: Repository<ScoreJob>,
+
+    private readonly dataSource: DataSource,
   ) {}
 
   async createSubmission(
@@ -28,7 +34,7 @@ export class SubmissionService {
   ): Promise<SubmissionResponseDto> {
     try {
       const sub = this.submissionRepo.create({
-        userId: submissionDto.userId,
+        learnerId: submissionDto.learnerId,
         simulationId: submissionDto.simulationId,
         status: SubmissionStatus.IN_PROGRESS,
       });
@@ -54,9 +60,8 @@ export class SubmissionService {
         throw new ConflictException('Cannot update a submitted submission');
       }
 
-      //assume data has a complete structure (data must have enough fields)
+      //ASSUME: data has a complete structure (data must have enough fields)
       submission.data = { ...submission.data, ...(updateDto.data ?? {}) };
-      submission.updatedAt = new Date();
       const saved = await this.submissionRepo.save(submission);
 
       console.log('Updated submission:', saved);
@@ -68,41 +73,46 @@ export class SubmissionService {
   }
 
   async submitSubmission(id: string): Promise<SubmissionResponseDto> {
-    // transactional update + enqueue job
-    const submission = await this.submissionRepo.findOne({ where: { id } });
-
-    if (!submission) throw new NotFoundException('Submission not found');
-    if (submission.status === SubmissionStatus.SUBMITTED) {
-      return { submissionId: submission.id, status: submission.status };
-    }
-
-    submission.status = SubmissionStatus.SUBMITTED;
-    submission.updatedAt = new Date();
-
-    const queryRunner =
-      this.submissionRepo.manager.connection.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
     try {
-      await queryRunner.manager.save(submission);
-      //add submission into job queue for scoring
+      const submission = await this.submissionRepo.findOne({ where: { id } });
 
-      await queryRunner.commitTransaction();
+      if (!submission) throw new NotFoundException('Submission not found');
+      if (submission.status === SubmissionStatus.SUBMITTED) {
+        return { submissionId: submission.id, status: submission.status };
+      }
 
-      console.log('Submitted submission:', submission);
-      return { submissionId: submission.id, status: submission.status };
+      submission.status = SubmissionStatus.SUBMITTED;
+      const savedSubmission = await this.submissionRepo.save(submission);
+
+      console.log('Submitted submission:', savedSubmission);
+      return {
+        submissionId: savedSubmission.id,
+        status: savedSubmission.status,
+      };
     } catch (error) {
       console.error('Error submitting submission:', error);
-      await queryRunner.rollbackTransaction();
       throw new InternalServerErrorException('Failed to submit submission');
-    } finally {
-      await queryRunner.release();
     }
+    // const scoreJob = this.scoreJobRepo.create({
+    //   submissionId: submission.id,
+    //   learnerId: submission.learnerId,
+    //   simulationId: submission.simulationId,
+    //   status: ScoreJobStatus.QUEUED,
+    // });
 
-    // // trigger scoring job (nếu dùng queue)
-    // if (this.scoringQueue) {
-    //   await this.scoringQueue.add('scoreSubmission', { submissionId: sub.id });
+    // try {
+    //   const result = await this.dataSource.transaction(async (manager) => {
+    //     const savedSubmission = await manager.save(submission);
+    //     // await manager.save(scoreJob);
+
+    //     return savedSubmission;
+    //   });
+
+    //   console.log('Submit successfully:', result);
+    //   return { submissionId: result.id, status: result.status };
+    // } catch (error) {
+    //   console.error('Submit failed:', error);
+    //   throw new InternalServerErrorException('Failed to submit submission');
     // }
   }
 }

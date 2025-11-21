@@ -1,11 +1,13 @@
-import { IsOptional, IsObject, IsNumber, IsString } from 'class-validator';
+import { IsOptional, IsObject, IsString, IsNotEmpty } from 'class-validator';
 
 class SubmissionCreateDto {
-  @IsNumber()
-  userId: number;
+  @IsNotEmpty({ message: 'learnerId is required' })
+  @IsString({ message: 'learnerId must be a string' })
+  learnerId: string;
 
-  @IsNumber()
-  simulationId: number;
+  @IsNotEmpty({ message: 'simulationId is required' })
+  @IsString({ message: 'simulationId must be a string' })
+  simulationId: string;
 }
 
 class SubmissionUpdateDto {
@@ -15,10 +17,10 @@ class SubmissionUpdateDto {
 }
 
 class SubmissionResponseDto {
-  @IsNumber()
+  @IsString({ message: 'submissionId must be a string' })
   submissionId: string;
 
-  @IsString()
+  @IsString({ message: 'status must be a string' })
   status: 'IN_PROGRESS' | 'SUBMITTED';
 }
 
