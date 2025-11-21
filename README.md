@@ -74,7 +74,7 @@ Check out a few resources that may come in handy when working with NestJS:
   - [x] implement retry/backoff and dead-letter handling
 - [x] Implement worker
   - [x] pull jobs, process submissions, acknowledge/fail correctly
-  - [ ] support concurrency limits and graceful shutdown
+  - [x] support concurrency limits and graceful shutdown
   - [x] surface processing errors for retries / DLQ
 - [ ] Add structured logging
   - [ ] integrate logger (winston/pino) with levels and JSON output

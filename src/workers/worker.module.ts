@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { ScoringWorkerModule } from './scoring/scoring.worker.module';
 import Joi from 'joi';
 import { DatabaseModule } from 'src/databases/db.module';
+import { RecoveryWorkerModule } from './recovery/recovery.worker.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { DatabaseModule } from 'src/databases/db.module';
     }),
     DatabaseModule,
     ScoringWorkerModule,
+    RecoveryWorkerModule,
   ],
 })
 export class WorkerModule {}

@@ -22,7 +22,8 @@ export class ScoreJobService {
     @InjectRepository(Submission)
     private submissionRepo: Repository<Submission>,
 
-    @InjectQueue('ScoreJobQueue') private scoreJobQueue: Queue,
+    @InjectQueue('ScoreJobQueue')
+    private scoreJobQueue: Queue,
 
     private readonly dataSource: DataSource,
   ) {}
@@ -75,7 +76,11 @@ export class ScoreJobService {
           submissionId: submission.id,
           //data can be huge, so only pass submissionId and load data in db later
         },
-        { attempts: 3, delay: 5000 },
+        {
+          jobId: savedJob.id,
+          attempts: 3,
+          backoff: { type: 'fixed', delay: 5000 },
+        },
       );
 
       console.log('Created score job:', savedJob);

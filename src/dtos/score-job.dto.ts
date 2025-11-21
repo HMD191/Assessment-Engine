@@ -25,4 +25,12 @@ class ScoreJobResponseDto {
   feedback?: string;
 }
 
-export { CreateScoreJobDto, ScoreJobResponseDto };
+class ScoreDto {
+  @IsNumber({}, { message: 'score must be a number' })
+  score: number;
+
+  @IsString({ message: 'feedback must be a string' })
+  feedback: string;
+}
+
+export { CreateScoreJobDto, ScoreJobResponseDto, ScoreDto };
