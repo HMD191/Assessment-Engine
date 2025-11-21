@@ -1,5 +1,5 @@
 import { InjectQueue } from '@nestjs/bullmq';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Queue } from 'bullmq';
 import {
@@ -10,6 +10,7 @@ import { Repository } from 'typeorm';
 
 @Injectable()
 export class RecoveryWorkerService {
+  private readonly logger = new Logger(RecoveryWorkerService.name);
   constructor(
     @InjectQueue('ScoreJobQueue')
     private scoreJobQueue: Queue,
@@ -20,7 +21,7 @@ export class RecoveryWorkerService {
 
   async recoverJobs() {
     try {
-      console.log('Starting job recovery process...');
+      this.logger.log('Starting job recovery process...');
 
       const pending = await this.scoreJobRepo.find({
         select: ['id', 'submissionId'],
@@ -38,9 +39,9 @@ export class RecoveryWorkerService {
         );
       }
 
-      console.log('Job recovery process completed.');
+      this.logger.log('Job recovery process completed.');
     } catch (error) {
-      console.error('Error during job recovery:', error);
+      this.logger.error('Error during job recovery:', error);
     }
   }
 }

@@ -2,6 +2,7 @@ import {
   ConflictException,
   Injectable,
   InternalServerErrorException,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import {
@@ -14,24 +15,36 @@ import {
   SubmissionUpdateDto,
 } from 'src/dtos/submission.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
-import { ScoreJob } from 'src/databases/entities/score-job.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class SubmissionService {
+  private readonly logger = new Logger(SubmissionService.name);
+
   constructor(
     @InjectRepository(Submission)
     private readonly submissionRepo: Repository<Submission>,
-
-    @InjectRepository(ScoreJob)
-    private readonly scoreJobRepo: Repository<ScoreJob>,
-
-    private readonly dataSource: DataSource,
   ) {}
 
   async createSubmission(
     submissionDto: SubmissionCreateDto,
   ): Promise<SubmissionResponseDto> {
+    const existedSubmission = await this.submissionRepo.findOne({
+      where: {
+        learnerId: submissionDto.learnerId,
+        simulationId: submissionDto.simulationId,
+      },
+    });
+
+    if (existedSubmission) {
+      this.logger.warn(
+        `Submission already exists for learnerId: ${submissionDto.learnerId}, simulationId: ${submissionDto.simulationId}`,
+      );
+      throw new ConflictException(
+        'A submission already exists for this learner and simulation',
+      );
+    }
+
     try {
       const sub = this.submissionRepo.create({
         learnerId: submissionDto.learnerId,
@@ -40,10 +53,10 @@ export class SubmissionService {
       });
       const savedData = await this.submissionRepo.save(sub);
 
-      console.log('Created submission:', savedData);
+      this.logger.log('Created submission:', savedData);
       return { submissionId: savedData.id, status: savedData.status };
     } catch (error) {
-      console.error('Error creating submission:', error);
+      this.logger.error('Error creating submission:', error);
       throw new InternalServerErrorException('Failed to create submission');
     }
   }
@@ -64,10 +77,10 @@ export class SubmissionService {
       submission.data = { ...submission.data, ...(updateDto.data ?? {}) };
       const saved = await this.submissionRepo.save(submission);
 
-      console.log('Updated submission:', saved);
+      this.logger.log('Updated submission:', saved);
       return { submissionId: saved.id, status: saved.status };
     } catch (error) {
-      console.error('Error updating submission:', error);
+      this.logger.error('Error updating submission:', error);
       throw new InternalServerErrorException('Failed to update submission');
     }
   }
@@ -84,13 +97,13 @@ export class SubmissionService {
       submission.status = SubmissionStatus.SUBMITTED;
       const savedSubmission = await this.submissionRepo.save(submission);
 
-      console.log('Submitted submission:', savedSubmission);
+      this.logger.log('Submitted submission:', savedSubmission);
       return {
         submissionId: savedSubmission.id,
         status: savedSubmission.status,
       };
     } catch (error) {
-      console.error('Error submitting submission:', error);
+      this.logger.error('Error submitting submission:', error);
       throw new InternalServerErrorException('Failed to submit submission');
     }
     // const scoreJob = this.scoreJobRepo.create({
@@ -108,10 +121,10 @@ export class SubmissionService {
     //     return savedSubmission;
     //   });
 
-    //   console.log('Submit successfully:', result);
+    //   this.logger.log('Submit successfully:', result);
     //   return { submissionId: result.id, status: result.status };
     // } catch (error) {
-    //   console.error('Submit failed:', error);
+    //   this.logger.error('Submit failed:', error);
     //   throw new InternalServerErrorException('Failed to submit submission');
     // }
   }

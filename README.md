@@ -76,10 +76,10 @@ Check out a few resources that may come in handy when working with NestJS:
   - [x] pull jobs, process submissions, acknowledge/fail correctly
   - [x] support concurrency limits and graceful shutdown
   - [x] surface processing errors for retries / DLQ
-- [ ] Add structured logging
-  - [ ] integrate logger (winston/pino) with levels and JSON output
-  - [ ] attach request IDs / correlation IDs to logs
-  - [ ] ensure worker logs include job metadata and errors
+- [x] Add structured logging
+  - [x] use nestjs logger
+  - [x] log job lifecycle events (enqueue, start, complete, fail)
+  - [x] attach request IDs / correlation IDs to logs
 - [ ] Document all endpoints
   - [ ] request/response examples and status codes in README
   - [ ] update OpenAPI/Swagger docs

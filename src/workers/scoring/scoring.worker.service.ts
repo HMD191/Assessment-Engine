@@ -1,4 +1,5 @@
 import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
+import { Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Job } from 'bullmq';
 import {
@@ -10,6 +11,8 @@ import { Repository } from 'typeorm';
 
 @Processor('ScoreJobQueue', { concurrency: 1 })
 export class ScoringWorkerService extends WorkerHost {
+  private readonly logger = new Logger(ScoringWorkerService.name);
+
   constructor(
     @InjectRepository(ScoreJob)
     private scoreJobRepo: Repository<ScoreJob>,
@@ -23,36 +26,36 @@ export class ScoringWorkerService extends WorkerHost {
         await this.scoreJobHandler(job);
         break;
       default:
-        console.warn('Unknown job name:', job.name);
+        this.logger.warn('Unknown job name:', job.name);
         return;
     }
   }
 
-  async scoreJobHandler(job: Job) {
+  private async scoreJobHandler(job: Job) {
     const { jobId, submissionId } = job.data;
 
     const record = await this.scoreJobRepo.findOne({
       where: { id: jobId },
     });
     if (!record) {
-      console.error(`ScoreJob with id ${jobId} not found`);
+      this.logger.error(`ScoreJob with id ${jobId} not found`);
       return;
     }
 
     try {
-      console.log(`Scoring submission ${submissionId} for job ${jobId}`);
+      this.logger.log(`Scoring submission ${submissionId} for job ${jobId}`);
       await this.scoreJobRepo.update(jobId, { status: ScoreJobStatus.RUNNING });
 
       //what if server restarts here? job should be re-queued and re-processed
 
       const dataForScoring = record.data;
 
-      console.log('-----------SCORING LOGIC START-----------');
-      console.log('Do something with data:', dataForScoring);
+      this.logger.log('-----------SCORING LOGIC START-----------');
+      this.logger.log('Do something with data:', dataForScoring);
 
       const { score, feedback } = await this.getScore(dataForScoring);
 
-      console.log('-----------SCORING LOGIC END-----------');
+      this.logger.log('-----------SCORING LOGIC END-----------');
 
       await this.scoreJobRepo.update(jobId, {
         status: ScoreJobStatus.DONE,
@@ -60,9 +63,9 @@ export class ScoringWorkerService extends WorkerHost {
         feedback,
       });
 
-      console.log(`Scoring completed for job ${jobId}: score=${score}`);
+      this.logger.log(`Scoring completed for job ${jobId}: score=${score}`);
     } catch (err) {
-      console.error(`Error scoring job ${jobId}:`, err);
+      this.logger.error(`Error scoring job ${jobId}:`, err);
       await this.scoreJobRepo.update(jobId, {
         status: ScoreJobStatus.ERROR,
         errorMessage: err.message,
@@ -71,7 +74,7 @@ export class ScoringWorkerService extends WorkerHost {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async getScore(data: any): Promise<ScoreDto> {
+  private async getScore(data: any): Promise<ScoreDto> {
     const timeoutMs = 60000;
 
     await new Promise((resolve) => setTimeout(resolve, timeoutMs));
@@ -83,16 +86,16 @@ export class ScoringWorkerService extends WorkerHost {
 
   @OnWorkerEvent('active')
   onActive(job: Job) {
-    console.log(`Job ${job.id} is now active; data:`, job.data);
+    this.logger.log(`Job ${job.id} is now active; data:`, job.data);
   }
 
   @OnWorkerEvent('completed')
   onCompleted(job: Job) {
-    console.log(`Job ${job.id} has completed`);
+    this.logger.log(`Job ${job.id} has completed`);
   }
 
   @OnWorkerEvent('failed')
   onFailed(job: Job, err: Error) {
-    console.log(`Job ${job.id} has failed with error:`, err);
+    this.logger.log(`Job ${job.id} has failed with error:`, err);
   }
 }

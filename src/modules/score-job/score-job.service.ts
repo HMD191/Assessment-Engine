@@ -5,16 +5,19 @@ import {
   ScoreJobStatus,
 } from 'src/databases/entities/score-job.entity';
 import { CreateScoreJobDto, ScoreJobResponseDto } from 'src/dtos/score-job.dto';
-import { DataSource, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Queue } from 'bullmq';
 import { InjectQueue } from '@nestjs/bullmq';
 import {
   Submission,
   SubmissionStatus,
 } from 'src/databases/entities/submission.entity';
+import { Logger } from '@nestjs/common';
 
 @Injectable()
 export class ScoreJobService {
+  private readonly logger = new Logger(ScoreJobService.name);
+
   constructor(
     @InjectRepository(ScoreJob)
     private scoreJobRepo: Repository<ScoreJob>,
@@ -24,8 +27,6 @@ export class ScoreJobService {
 
     @InjectQueue('ScoreJobQueue')
     private scoreJobQueue: Queue,
-
-    private readonly dataSource: DataSource,
   ) {}
 
   async createJob(
@@ -83,11 +84,11 @@ export class ScoreJobService {
         },
       );
 
-      console.log('Created score job:', savedJob);
+      this.logger.log('Created score job:', savedJob);
       return { jobId: savedJob.id, status: savedJob.status };
     } catch (error) {
-      console.error('Error creating score job:', error);
-      throw error;
+      this.logger.error('Error creating score job:', error.message);
+      throw new Error('Failed to create score job: ' + error.message);
     }
   }
 
@@ -105,6 +106,7 @@ export class ScoreJobService {
       response.feedback = job.feedback;
     }
 
+    this.logger.log('Fetched score job:', response);
     return response;
   }
 }
