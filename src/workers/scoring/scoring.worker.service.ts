@@ -8,8 +8,8 @@ import {
 } from 'src/databases/entities/score-job.entity';
 import { ScoreDto } from 'src/dtos/score-job.dto';
 import { Repository } from 'typeorm';
+import { WORKER_CONCURRENCY } from '../../configs/bootstrap';
 
-const WORKER_CONCURRENCY = parseInt(process.env.WORKER_CONCURRENCY || '2', 10);
 @Processor('ScoreJobQueue', { concurrency: WORKER_CONCURRENCY })
 export class ScoringWorkerService extends WorkerHost {
   private readonly logger = new Logger(ScoringWorkerService.name);
@@ -19,6 +19,9 @@ export class ScoringWorkerService extends WorkerHost {
     private scoreJobRepo: Repository<ScoreJob>,
   ) {
     super();
+    this.logger.log(
+      `Worker initialized with concurrency: ${WORKER_CONCURRENCY}`,
+    );
   }
 
   async process(job: Job): Promise<any> {
@@ -49,13 +52,7 @@ export class ScoringWorkerService extends WorkerHost {
       await this.scoreJobRepo.update(jobId, { status: ScoreJobStatus.RUNNING });
 
       const dataForScoring = record.data;
-
-      this.logger.log('-----------SCORING LOGIC START-----------');
-      this.logger.log('Do something with data:', dataForScoring);
-
       const { score, feedback } = await this.getScore(dataForScoring);
-
-      this.logger.log('-----------SCORING LOGIC END-----------');
 
       await this.scoreJobRepo.update(jobId, {
         status: ScoreJobStatus.DONE,
@@ -76,6 +73,7 @@ export class ScoringWorkerService extends WorkerHost {
   // fake scoring function
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private async getScore(data: any): Promise<ScoreDto> {
+    this.logger.log('Do something with data');
     const timeoutMs = 60000;
 
     await new Promise((resolve) => setTimeout(resolve, timeoutMs));

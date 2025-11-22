@@ -1,3 +1,4 @@
+import '../configs/bootstrap';
 import { NestFactory } from '@nestjs/core';
 import { WorkerModule } from './worker.module';
 import { RecoveryWorkerService } from './recovery/recovery.worker.service';
