@@ -9,7 +9,8 @@ import {
 import { ScoreDto } from 'src/dtos/score-job.dto';
 import { Repository } from 'typeorm';
 
-@Processor('ScoreJobQueue', { concurrency: 1 })
+const WORKER_CONCURRENCY = parseInt(process.env.WORKER_CONCURRENCY || '2', 10);
+@Processor('ScoreJobQueue', { concurrency: WORKER_CONCURRENCY })
 export class ScoringWorkerService extends WorkerHost {
   private readonly logger = new Logger(ScoringWorkerService.name);
 

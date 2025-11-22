@@ -73,11 +73,11 @@ export class ScoreJobService {
           await manager.update(Submission, submission.id, {
             latestScoreJobId: saved.id,
           });
+
           return saved;
         },
       );
 
-      // Enqueue to BullMQ
       await this.scoreJobQueue.add(
         'scoreJobHandler',
         {

@@ -1,27 +1,24 @@
-## Description
+# Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+some description here
+
+# Setup instructions (Run locally)
 
 ## Project setup
-
 ```bash
 $ npm install
 ```
 
 ## Compile and run the project
-
 ```bash
 # development
 $ npm run start
 
 # watch mode
 $ npm run start:dev
-
-# production mode
-$ npm run start:prod
 ```
 
-## Run tests
+## Run tests (Haven't been implemented yet)
 
 ```bash
 # unit tests
@@ -34,34 +31,11 @@ $ npm run test:e2e
 $ npm run test:cov
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+# Deployment
+//can instruct docker
 
 
-## TODO
+# TODO
 
 - [x] API for submission implemented
   - [x] POST /submissions to create a submission
@@ -69,7 +43,8 @@ Check out a few resources that may come in handy when working with NestJS:
   - [x] PATCH /submissions/:id to update submission data
 
 - [x] Add submission into queue
-  - [x] enqueue submissions after validation
+  - [x] POST handler enqueues job
+  - [x] GET handler checks job status
   - [x] ensure idempotency / deduplication
   - [x] implement retry/backoff and dead-letter handling
 - [x] Implement worker
@@ -81,14 +56,33 @@ Check out a few resources that may come in handy when working with NestJS:
   - [x] log job lifecycle events (enqueue, start, complete, fail)
   - [x] attach request IDs / correlation IDs to logs
 - [x] Document all endpoints
-  - [x] update OpenAPI + Swagger docs
+  - [x] OpenAPI
+  - [x] Swagger docs
 - [ ] Add tests
   - [ ] unit tests for submission handler / validation
   - [ ] integration tests for enqueue -> worker flow (use test queue or in-memory)
   - [ ] e2e tests for API endpoints
   - [ ] enforce coverage thresholds in CI
+- [x] Dockerize the application
+  - [x] create Dockerfile for API + worker
+  - [x] setup docker-compose for local development with dependencies (DB, queue)
+  - [x] document how to run with Docker
 
-Optional / follow-ups
-- [ ] CI/CD: run lint, tests, and build on push; fail on coverage regression
-- [ ] Observability: metrics (Prometheus), health-check endpoints, and error reporting (Sentry)
-- [ ] Deployment: verify prod config (env vars, secrets) and document deployment steps
+# Architecture Overview
+![Architecture picture](./assets/architecture_diagram.png)
+
+# API Documentation
+The API documentation is available at `/docs` endpoint when the server is running or at `openapi.yaml` file in the project root.
+
+# Design decisions and trade-offs
+
+## PostgreSQL database schema
+tells about the tables and relationships used to store submission data.
+### Pros
+### Cons
+How to improve it further.
+
+## Queue System
+### Pros
+### Cons
+How to improve it further.

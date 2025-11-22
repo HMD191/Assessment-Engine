@@ -17,7 +17,7 @@ import {
 } from 'src/dtos/submission.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { ScoreJobService } from '../score-job/score-job.service';
+import { ScoreJobService } from 'src/modules/score-job/score-job.service';
 import { CreateScoreJobDto } from 'src/dtos/score-job.dto';
 
 @Injectable()
