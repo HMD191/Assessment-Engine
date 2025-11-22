@@ -115,11 +115,6 @@ export class SubmissionService {
           data: savedSubmission.data,
         };
         await this.scoreJobService.createJob(createdJobObject);
-
-        this.logger.log(
-          'Created score job for submission:',
-          savedSubmission.id,
-        );
       } catch (error) {
         this.logger.error(
           `Error creating score job for submission ${savedSubmission.id}:`,

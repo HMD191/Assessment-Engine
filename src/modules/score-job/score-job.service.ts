@@ -77,6 +77,9 @@ export class ScoreJobService {
           return saved;
         },
       );
+      this.logger.log(
+        `Created score job with ID: ${savedJob.id} for submission ID: ${submission.id}`,
+      );
 
       await this.scoreJobQueue.add(
         'scoreJobHandler',
@@ -92,8 +95,10 @@ export class ScoreJobService {
           removeOnFail: false,
         },
       );
+      this.logger.log(
+        `Added score job to queue with ID: ${savedJob.id} for submission ID: ${submission.id}`,
+      );
 
-      this.logger.log(`Created score job ${savedJob.id}`);
       return { jobId: savedJob.id, status: savedJob.status };
     } catch (error) {
       this.logger.error(
