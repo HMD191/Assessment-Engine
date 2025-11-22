@@ -122,8 +122,7 @@ The API documentation is available at `/docs` endpoint when the server is runnin
 ---
 ### Queue Architecture (BullMQ + Redis)
 
-This service uses **BullMQ** as the job queue system and **Redis** as the message broker.  
-The queue is responsible for processing scoring jobs (`ScoreJob`) asynchronously and reliably.
+This service uses **BullMQ** as the job queue system and **Redis** as the message broker. The queue is responsible for processing scoring jobs (`ScoreJob`) asynchronously and reliably.
 
 **Queue Name**: `scoreJobQueue`
 
@@ -153,39 +152,39 @@ The queue is responsible for processing scoring jobs (`ScoreJob`) asynchronously
 > - Consider pushing `data` field for scoring to the queue:
 >   - -> Don't need to pull data from DB again in the worker
 >   - -> Worker can score multiple jobIds. Then batch update score + feedback into table `score_job` later to reduce DB calls.
+> - Tune or scale (Redis Cluster) for high-throughput systems.
 
-
-
----
 # TODOs
 
-- [x] API for submissions
-  - [x] POST /submissions to create a submission
-  - [x] GET /submissions/:id to get submission status/data
-  - [x] PATCH /submissions/:id to update submission data
+- **Submission API**
+  - [x] POST /submissions → create a submission
+  - [x] GET /submissions/:id → get submission status/data
+  - [x] PATCH /submissions/:id → update submission
 
-- [x] API for scoring jobs
-  - [x] POST /scoring-jobs handler enqueues job
-  - [x] GET /scoring-jobs/:id handler checks job status
-  - [x] ensure idempotency / deduplication
-  - [x] implement retry/backoff and dead-letter handling
-- [x] Implement worker
-  - [x] pull jobs, process submissions, acknowledge/fail correctly
-  - [x] support concurrency limits and graceful shutdown
-  - [x] surface processing errors for retries / DLQ
-- [x] Add structured logging
-  - [x] use nestjs logger
-  - [x] log job lifecycle events (enqueue, start, complete, fail)
-  - [x] attach request IDs / correlation IDs to logs
-- [x] Document all endpoints
-  - [x] OpenAPI
-  - [x] Swagger docs
-- [ ] Add tests
-  - [ ] unit tests for submission handler / validation
-  - [ ] integration tests for enqueue -> worker flow (use test queue or in-memory)
+- **Scoring Jobs**
+  - [x] POST /scoring-jobs → enqueue job
+  - [x] GET /scoring-jobs/:id → check job status
+  - [x] Ensure idempotency and retry/backoff handling
+
+- **Worker**
+  - [x] Process jobs from queue
+  - [x] Support concurrency limits and graceful shutdown
+  - [x] Handle processing errors for retries / dead-letter
+  - [ ] Scoring multiple jobs and updating in batch to reduce DB calls
+
+- **Logging & Monitoring**
+  - [x] Structured logging with NestJS logger
+  - [x] Log job lifecycle events and correlation IDs
+
+- **Documentation**
+  - [x] OpenAPI + Swagger docs
+
+- **Docker**
+  - [x] Dockerfile for API + worker
+  - [x] docker-compose for local development with DB and queue
+
+- **Testing**
+  - [ ] Unit tests
+  - [ ] Integration tests for enqueue → worker flow
   - [ ] e2e tests for API endpoints
-  - [ ] enforce coverage thresholds in CI
-- [x] Dockerize the application
-  - [x] create Dockerfile for API + worker
-  - [x] setup docker-compose for local development with dependencies (DB, queue)
-  - [x] document how to run with Docker
+  - [ ] Enforce coverage thresholds in CI
