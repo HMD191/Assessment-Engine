@@ -88,6 +88,8 @@ export class ScoreJobService {
           jobId: savedJob.id,
           attempts: 3,
           backoff: { type: 'fixed', delay: 5000 },
+          removeOnComplete: true,
+          removeOnFail: false,
         },
       );
 

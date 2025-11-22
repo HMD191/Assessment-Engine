@@ -25,12 +25,12 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document); // mount at /docs
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.APP_PORT ?? 3000);
   logger.log(
-    `Application is running on: http://localhost:${process.env.PORT ?? 3000}`,
+    `Application is running on: http://localhost:${process.env.APP_PORT ?? 3000}`,
   );
   logger.log(
-    `Swagger docs available at: http://localhost:${process.env.PORT ?? 3000}/docs`,
+    `Swagger docs available at: http://localhost:${process.env.APP_PORT ?? 3000}/docs`,
   );
 }
 bootstrap();
