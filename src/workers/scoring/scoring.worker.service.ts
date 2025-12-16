@@ -67,6 +67,8 @@ export class ScoringWorkerService extends WorkerHost {
         status: ScoreJobStatus.ERROR,
         errorMessage: err.message,
       });
+
+      throw err;
     }
   }
 

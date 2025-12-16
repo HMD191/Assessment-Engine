@@ -90,7 +90,7 @@ export class ScoreJobService {
         {
           jobId: savedJob.id,
           attempts: 3,
-          backoff: { type: 'fixed', delay: 5000 },
+          backoff: { type: 'exponential', delay: 5000 },
           removeOnComplete: true,
           removeOnFail: false,
         },
@@ -125,6 +125,10 @@ export class ScoreJobService {
     if (job.status === ScoreJobStatus.DONE) {
       response.score = job.score;
       response.feedback = job.feedback;
+    }
+
+    if (job.status === ScoreJobStatus.ERROR) {
+      response.error = job.errorMessage;
     }
 
     this.logger.log('Fetched score job:', response);

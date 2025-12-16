@@ -52,6 +52,13 @@ class ScoreJobResponseDto {
   })
   @IsString({ message: 'feedback must be a string' })
   feedback?: string;
+
+  @ApiPropertyOptional({
+    description: 'Error message if scoring failed',
+    example: 'Scoring service unavailable',
+  })
+  @IsString({ message: 'error must be a string' })
+  error?: string;
 }
 
 class ScoreDto {

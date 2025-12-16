@@ -90,7 +90,7 @@ The API documentation is available at `/docs` endpoint when the server is runnin
 | `updated_at`           | `timestamp`                             | Timestamp of last update.                             |
 
 
-### 🧩 Table: `score_job`
+### Table: `score_job`
 
 **Description**: Stores individual scoring jobs processed by the system. A submission can generate multiple score jobs.
 
@@ -152,7 +152,7 @@ This service uses **BullMQ** as the job queue system and **Redis** as the messag
 
 - Reliable Job Processing: Jobs survive server restarts and can be retried based on configured attempts/backoff + recovery logic mechanism in code.
 
-- Scalable Worker Architecture: Workers can be scaled horizontally to handle higher scoring throughput. Queue concurrency can be tuned ({ concurrency: N }) without modifying API logic.
+- Scalable Worker Architecture: Workers can be scaled horizontally to handle higher scoring throughput. Queue concurrency can be tuned ({ concurrency: N } or init multiple workers) without modifying API logic.
 
 ### Cons
 - Potential Bottleneck: 
